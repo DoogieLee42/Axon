@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>임상 노트 작성</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Helvetica Neue", Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 3rem clamp(1.5rem, 4vw, 4rem);
+        background: #f5f5f7;
+        color: #1d1d1f;
+        line-height: 1.6;
+      }
+      h2 {
+        margin: 0 0 2rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 480px) 1fr;
+        gap: 2.5rem;
+        align-items: start;
+      }
+      form {
+        background: #ffffff;
+        border: 1px solid #d2d2d7;
+        border-radius: 20px;
+        padding: 2.25rem;
+        display: grid;
+        gap: 1.4rem;
+        box-shadow: 0 26px 50px rgba(0, 0, 0, 0.06);
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.88rem;
+        color: #636366;
+        font-weight: 600;
+      }
+      select,
+      textarea {
+        border: 1px solid #d1d1d6;
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        font-size: 0.97rem;
+        color: inherit;
+        background: #fdfdfd;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        resize: vertical;
+      }
+      textarea {
+        min-height: 420px;
+      }
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #8e8e93;
+        box-shadow: 0 0 0 3px rgba(142, 142, 147, 0.18);
+      }
+      .field-error {
+        color: #d12c2c;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+      }
+      button[type="submit"] {
+        border: none;
+        border-radius: 999px;
+        padding: 0.9rem 2rem;
+        font-size: 0.98rem;
+        font-weight: 600;
+        background: #1d1d1f;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      button[type="submit"]:hover {
+        background: #2c2c2e;
+        transform: translateY(-1px);
+      }
+      .messages {
+        margin-bottom: 1.5rem;
+        padding: 0;
+      }
+      .messages li {
+        list-style: none;
+        padding: 0.95rem 1.1rem;
+        border-radius: 14px;
+        margin-bottom: 0.7rem;
+        font-size: 0.9rem;
+        border: 1px solid #d2d2d7;
+        background: #fdfdfd;
+      }
+      .messages .success {
+        border-color: #c7d7c5;
+        background: #f4f6f3;
+        color: #2f3d2a;
+      }
+      .messages .error {
+        border-color: #e3c4c4;
+        background: #fdf5f5;
+        color: #5c2525;
+      }
+      .diagnosis-panel {
+        background: #ffffff;
+        border: 1px solid #d2d2d7;
+        border-radius: 20px;
+        padding: 1.95rem;
+        box-shadow: 0 26px 50px rgba(0, 0, 0, 0.06);
+      }
+      .diagnosis-panel header {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1.2rem;
+      }
+      .diagnosis-panel h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .diagnosis-panel input[type="search"] {
+        flex: 1;
+        border: 1px solid #d1d1d6;
+        border-radius: 12px;
+        padding: 0.7rem 0.95rem;
+        font-size: 0.95rem;
+        background: #fdfdfd;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .diagnosis-panel input[type="search"]:focus {
+        outline: none;
+        border-color: #8e8e93;
+        box-shadow: 0 0 0 3px rgba(142, 142, 147, 0.18);
+      }
+      .diagnosis-list {
+        max-height: 560px;
+        overflow-y: auto;
+        border-top: 1px solid #e5e5ea;
+      }
+      .diagnosis-item {
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #e5e5ea;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      .diagnosis-item strong {
+        display: inline-block;
+        min-width: 6rem;
+        font-family: "SF Mono", "Apple SD Gothic Neo", "Noto Sans Mono", monospace;
+        font-size: 0.88rem;
+      }
+      .diagnosis-item:hover,
+      .diagnosis-item.active {
+        background: #f0f0f5;
+        color: #1d1d1f;
+      }
+      .selected-indicator {
+        background: #f7f7f9;
+        border: 1px solid #d2d2d7;
+        border-radius: 16px;
+        padding: 0.9rem 1.2rem;
+        font-size: 0.9rem;
+        color: #1d1d1f;
+      }
+      .selected-indicator strong {
+        margin-right: 0.5rem;
+      }
+      .recent-notes {
+        margin-top: 1.75rem;
+        background: #ffffff;
+        border: 1px solid #d2d2d7;
+        border-radius: 18px;
+        padding: 1.6rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.05);
+      }
+      .recent-notes h3 {
+        margin: 0 0 1rem;
+        font-size: 1.02rem;
+        font-weight: 600;
+      }
+      .recent-notes ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .recent-notes li {
+        padding: 0.65rem 0;
+        border-bottom: 1px solid #e5e5ea;
+        font-size: 0.9rem;
+        color: #3a3a3c;
+      }
+      .recent-notes li:last-child {
+        border-bottom: none;
+      }
+      p {
+        margin: 0;
+      }
+      @media (max-width: 1024px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .diagnosis-panel {
+          order: -1;
+        }
+      }
+      @media (max-width: 720px) {
+        body {
+          padding: 2.5rem 1.25rem;
+        }
+        form {
+          padding: 1.75rem;
+        }
+        .diagnosis-panel {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>임상 노트 작성</h2>
+
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="layout">
+      <section>
+        <form method="post">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <ul class="messages">
+              {% for error in form.non_field_errors %}
+                <li class="error">{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+          <label>
+            {{ form.patient.label }}
+            {{ form.patient }}
+            {% if form.patient.errors %}
+              <span class="field-error">{{ form.patient.errors|join:', ' }}</span>
+            {% endif %}
+          </label>
+
+          <div class="selected-indicator">
+            <strong id="selected-dx-code">진단 미선택</strong>
+            <span id="selected-dx-name"></span>
+          </div>
+
+          <label>
+            {{ form.note_text.label }}
+            {{ form.note_text }}
+            {% if form.note_text.errors %}
+              <span class="field-error">{{ form.note_text.errors|join:', ' }}</span>
+            {% endif %}
+          </label>
+
+          <div class="actions">
+            <button type="submit">임상 노트 저장</button>
+          </div>
+        </form>
+
+        <aside class="recent-notes">
+          <h3>최근 임상 노트</h3>
+          <ul>
+            {% for note in recent_notes %}
+              <li>
+                <strong>{{ note.patient.name }}</strong> ({{ note.patient.reg_no }}) ·
+                {{ note.visit_date|date:"Y-m-d H:i" }} ·
+                진단: {{ note.primary_icd|default:"-" }}
+              </li>
+            {% empty %}
+              <li>등록된 임상 노트가 없습니다.</li>
+            {% endfor %}
+          </ul>
+        </aside>
+      </section>
+
+      <aside class="diagnosis-panel">
+        <header>
+          <h3 style="margin:0;">진단 코드 선택</h3>
+          <input type="search" id="diagnosis-search" placeholder="코드 또는 진단명 검색" />
+        </header>
+        <div class="diagnosis-list" id="diagnosis-list">
+          {% for item in diagnoses %}
+            <div class="diagnosis-item" data-code="{{ item.code }}" data-name="{{ item.name }}">
+              <strong>{{ item.code }}</strong>
+              <span>{{ item.name }}</span>
+            </div>
+          {% empty %}
+            <p>등록된 진단 마스터가 없습니다.</p>
+          {% endfor %}
+        </div>
+        <p style="margin-top:1rem; font-size:0.85rem; color:#8a94a6;">
+          최대 500건까지 표시됩니다. 마스터 데이터를 갱신하면 목록이 확장됩니다.
+        </p>
+      </aside>
+    </div>
+
+    <script>
+      (function() {
+        const searchInput = document.getElementById('diagnosis-search');
+        const listContainer = document.getElementById('diagnosis-list');
+        const items = Array.from(listContainer.querySelectorAll('.diagnosis-item'));
+        const primaryInput = document.getElementById('id_primary_icd');
+        const noteArea = document.getElementById('id_note_text');
+        const selectedCode = document.getElementById('selected-dx-code');
+        const selectedName = document.getElementById('selected-dx-name');
+
+        function updateSelected(code, name) {
+          const key = (code || '').toUpperCase();
+          items.forEach((el) => el.classList.toggle('active', el.dataset.code.toUpperCase() === key));
+          selectedCode.textContent = key ? `진단 코드: ${key}` : '진단 미선택';
+          selectedName.textContent = name || '';
+        }
+
+        function injectDiagnosis(code, name) {
+          const lines = noteArea.value.split('\n');
+          const label = 'KCD/ICD:';
+          const entry = `${label} ${code.toUpperCase()}${name ? \` - ${name}\` : \``}`.trim();
+          const idx = lines.findIndex((line) => line.trim().toUpperCase().startsWith(label));
+          if (idx >= 0) {
+            lines[idx] = entry;
+          } else {
+            if (noteArea.value.trim() !== '') {
+              lines.push('');
+            }
+            lines.push(entry);
+          }
+          noteArea.value = lines.filter(Boolean).join('\n');
+        }
+
+        function restoreFromHidden() {
+          const code = primaryInput.value.trim();
+          if (!code) {
+            updateSelected('', '');
+            return;
+          }
+          const upper = code.toUpperCase();
+          const target = items.find((el) => el.dataset.code.toUpperCase() === upper);
+          updateSelected(upper, target ? target.dataset.name : '');
+        }
+
+        listContainer.addEventListener('click', (event) => {
+          const target = event.target.closest('.diagnosis-item');
+          if (!target) return;
+          const { code, name } = target.dataset;
+          const upper = code.toUpperCase();
+          primaryInput.value = upper;
+          injectDiagnosis(upper, name);
+          updateSelected(upper, name);
+        });
+
+        searchInput.addEventListener('input', () => {
+          const query = searchInput.value.trim().toLowerCase();
+          items.forEach((el) => {
+            const haystack = (el.dataset.code + ' ' + el.dataset.name).toLowerCase();
+            el.style.display = haystack.includes(query) ? 'block' : 'none';
+          });
+        });
+
+        restoreFromHidden();
+      })();
+    </script>
+  </body>
+</html>

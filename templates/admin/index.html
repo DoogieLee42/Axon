@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="patient-admin-home">
+  <h1>{% trans "환자 레지스트리" %}</h1>
+  <p class="lead">{% trans "환자 등록과 관리에 필요한 기능만 모았습니다." %}</p>
+  <div class="home-actions">
+    <a class="action primary" href="{% url 'admin:patients_patient_add' %}">{% trans "환자 등록" %}</a>
+    <a class="action secondary" href="{% url 'admin:patients_patient_changelist' %}">{% trans "등록 환자 목록" %}</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root {
+    font-family: "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Helvetica Neue", Arial, sans-serif;
+  }
+  .patient-admin-home {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 4.5rem 1rem;
+    text-align: center;
+    color: #1d1d1f;
+  }
+  .patient-admin-home h1 {
+    font-size: 2.15rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .patient-admin-home .lead {
+    font-size: 1rem;
+    color: #636366;
+    margin-bottom: 2.75rem;
+  }
+  .home-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .home-actions .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid #d2d2d7;
+    background: #ffffff;
+    color: #1d1d1f;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.06);
+  }
+  .home-actions .action:hover {
+    transform: translateY(-1px);
+    background: #f5f5f7;
+  }
+  .home-actions .action.primary {
+    background: #1d1d1f;
+    color: #ffffff;
+    border-color: #1d1d1f;
+  }
+  .home-actions .action.primary:hover {
+    background: #2c2c2e;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>고급 환자 검색</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Helvetica Neue", Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 3.5rem clamp(1.5rem, 4vw, 4rem);
+        background: #f5f5f7;
+        color: #1d1d1f;
+        line-height: 1.6;
+      }
+      h2 {
+        margin: 0 0 2rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      form {
+        margin-bottom: 2rem;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.1rem;
+        padding: 2rem;
+        background: #ffffff;
+        border: 1px solid #d2d2d7;
+        border-radius: 18px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.06);
+      }
+      form .full {
+        grid-column: span 4;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        font-size: 0.85rem;
+        color: #636366;
+      }
+      input,
+      select {
+        appearance: none;
+        border: 1px solid #d1d1d6;
+        border-radius: 12px;
+        padding: 0.75rem 0.95rem;
+        font-size: 0.95rem;
+        color: inherit;
+        background: #fdfdfd;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #8e8e93;
+        box-shadow: 0 0 0 3px rgba(142, 142, 147, 0.2);
+      }
+      button[type="submit"] {
+        align-self: end;
+        justify-self: end;
+        border: none;
+        border-radius: 999px;
+        padding: 0.85rem 1.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        background: #1d1d1f;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      button[type="submit"]:hover {
+        background: #2c2c2e;
+        transform: translateY(-1px);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      }
+      th,
+      td {
+        padding: 0.85rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e5ea;
+        font-size: 0.92rem;
+      }
+      th {
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        color: #3a3a3c;
+        background: #f9f9fb;
+      }
+      tbody tr:nth-child(even) {
+        background: #f7f7fa;
+      }
+      tbody tr:hover {
+        background: #f0f0f5;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      td:first-child,
+      th:first-child {
+        padding-left: 1.5rem;
+      }
+      td:last-child,
+      th:last-child {
+        padding-right: 1.5rem;
+      }
+      @media (max-width: 960px) {
+        form {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        form .full {
+          grid-column: span 2;
+        }
+        button[type="submit"] {
+          justify-self: stretch;
+        }
+      }
+      @media (max-width: 640px) {
+        body {
+          padding: 2.5rem 1rem;
+        }
+        form {
+          grid-template-columns: 1fr;
+        }
+        form .full {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>고급 환자 검색</h2>
+    <form method="get" action="">
+      <label class="full">
+        검색어
+        <input type="text" name="q" value="{{ q }}" placeholder="이름 / 등록번호 / 주민번호 / 연락처 / 주소" />
+      </label>
+      <label>
+        성별
+        <select name="gender">
+          <option value="">전체</option>
+          <option value="M" {% if gender == 'M' %}selected{% endif %}>남</option>
+          <option value="F" {% if gender == 'F' %}selected{% endif %}>여</option>
+          <option value="U" {% if gender == 'U' %}selected{% endif %}>기타</option>
+        </select>
+      </label>
+      <label>
+        생년월일(From)
+        <input type="date" name="dob_from" value="{{ dob_from }}" />
+      </label>
+      <label>
+        생년월일(To)
+        <input type="date" name="dob_to" value="{{ dob_to }}" />
+      </label>
+      <button type="submit">검색</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>등록번호</th>
+          <th>이름</th>
+          <th>성별</th>
+          <th>생년월일</th>
+          <th>휴대전화</th>
+          <th>주소</th>
+          <th>등록일</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for patient in results %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ patient.reg_no }}</td>
+            <td>{{ patient.name }}</td>
+            <td>{{ patient.get_gender_display }}</td>
+            <td>{{ patient.birth_date }}</td>
+            <td>{{ patient.phone }}</td>
+            <td>{{ patient.address }}</td>
+            <td>{{ patient.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8">조건에 맞는 환자가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

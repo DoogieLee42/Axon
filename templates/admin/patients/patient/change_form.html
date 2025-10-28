@@ -1,0 +1,775 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+  {% if duplicate_button_url %}
+    <li>
+      <form action="{{ duplicate_button_url }}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="button">{% trans '새 등록번호 발급' %}</button>
+      </form>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root {
+    color-scheme: light;
+    font-family: "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Helvetica Neue", Arial, sans-serif;
+  }
+  .patient-dashboard {
+    margin-bottom: 2.5rem;
+    color: #1d1d1f;
+  }
+  .patient-summary-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    background: #ffffff;
+    border: 1px solid #d2d2d7;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.06);
+  }
+  .summary-item h4 {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8e8e93;
+  }
+  .summary-item p {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1d1d1f;
+  }
+  .summary-item .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.85rem;
+    border-radius: 999px;
+    background: #f1f1f5;
+    border: 1px solid #d2d2d7;
+    color: #1d1d1f;
+    font-size: 0.9rem;
+  }
+  .patient-nav {
+    margin: 2.4rem 0 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+  .patient-nav a {
+    padding: 0.6rem 1.35rem;
+    border-radius: 999px;
+    background: #f2f2f7;
+    color: #1d1d1f;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid #d2d2d7;
+    transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .patient-nav a:hover {
+    background: #e5e5ea;
+    transform: translateY(-1px);
+  }
+  .section-card {
+    background: #ffffff;
+    border: 1px solid #d2d2d7;
+    border-radius: 22px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 26px 52px rgba(0, 0, 0, 0.06);
+  }
+  .section-card h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1d1d1f;
+  }
+  .section-card h4 {
+    margin-top: 1.45rem;
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: #2c2c2e;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-card h4 .badge {
+    background: #ededf0;
+    color: #2c2c2e;
+    border-radius: 999px;
+    padding: 0.15rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .section-actions {
+    margin: 1.35rem 0;
+    padding: 1.15rem 1.3rem;
+    border: 1px solid #dedee2;
+    border-radius: 16px;
+    background: #f7f7f9;
+  }
+  .section-actions h5 {
+    margin: 0 0 0.7rem;
+    font-size: 0.94rem;
+    color: #3a3a3c;
+    font-weight: 600;
+  }
+  form.inline-form {
+    display: grid;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  form.inline-form .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+  form.inline-form button {
+    justify-self: flex-start;
+  }
+  .inline-form input,
+  .inline-form select,
+  .inline-form textarea {
+    border: 1px solid #d1d1d6;
+    border-radius: 12px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+    background: #fdfdfd;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .inline-form input:focus,
+  .inline-form select:focus,
+  .inline-form textarea:focus {
+    outline: none;
+    border-color: #8e8e93;
+    box-shadow: 0 0 0 3px rgba(142, 142, 147, 0.2);
+  }
+  .inline-form button,
+  .inline-edit-form button {
+    padding: 0.48rem 1.2rem;
+    border-radius: 999px;
+    border: 1px solid #1d1d1f;
+    background: #1d1d1f;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  .inline-form button:hover,
+  .inline-edit-form button:hover {
+    background: #2c2c2e;
+    border-color: #2c2c2e;
+    transform: translateY(-1px);
+  }
+  table.patient-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.92rem;
+  }
+  table.patient-table th,
+  table.patient-table td {
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid #e5e5ea;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.patient-table th {
+    background: #f7f7f9;
+    color: #3a3a3c;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: 0.78rem;
+  }
+  .note-block {
+    border: 1px solid #dedee2;
+    border-radius: 18px;
+    padding: 1.25rem 1.4rem;
+    margin-top: 1.15rem;
+    background: #ffffff;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.05);
+  }
+  .note-meta {
+    font-size: 0.85rem;
+    color: #636366;
+    margin-bottom: 0.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+  }
+  .empty-hint {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    border-radius: 14px;
+    background: #f7f7f9;
+    border: 1px dashed #d2d2d7;
+    color: #636366;
+    font-size: 0.9rem;
+  }
+  .inline-edit-form {
+    margin-top: 1rem;
+    border-top: 1px dashed #dcdcde;
+    padding-top: 0.9rem;
+  }
+  .external-list {
+    margin-top: 1.1rem;
+    display: grid;
+    gap: 1.1rem;
+  }
+  .external-card {
+    border: 1px solid #dedee2;
+    border-radius: 18px;
+    padding: 1.2rem 1.4rem;
+    background: #ffffff;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.05);
+  }
+  .external-card h5 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1d1d1f;
+  }
+  .external-card p {
+    margin: 0.2rem 0;
+    font-size: 0.9rem;
+    color: #3a3a3c;
+  }
+  .patient-edit {
+    margin-top: 3rem;
+    border: 1px solid #d2d2d7;
+    border-radius: 20px;
+    background: #ffffff;
+    padding: 1.5rem 1.6rem;
+    box-shadow: 0 22px 46px rgba(0, 0, 0, 0.05);
+  }
+  .patient-edit summary {
+    font-weight: 600;
+    color: #1d1d1f;
+    font-size: 1rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .patient-edit summary::-webkit-details-marker {
+    display: none;
+  }
+  .patient-edit summary::after {
+    content: "﹀";
+    font-size: 0.9rem;
+    margin-left: 0.4rem;
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+  details[open] > summary::after {
+    transform: rotate(180deg);
+  }
+  .patient-edit .edit-wrapper {
+    margin-top: 1.2rem;
+  }
+  .form-errors {
+    color: #d12c2c;
+    font-size: 0.85rem;
+  }
+  .measurement-grid {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .measurement-card {
+    border: 1px solid #dedee2;
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    background: #fdfdfd;
+  }
+  .measurement-card h5 {
+    margin: 0 0 0.6rem;
+    font-size: 0.95rem;
+    color: #3a3a3c;
+    font-weight: 600;
+  }
+  .measurement-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 1rem;
+    row-gap: 0.4rem;
+    font-size: 0.9rem;
+    color: #2c2c2e;
+  }
+  .measurement-card dt {
+    font-weight: 500;
+    color: #636366;
+  }
+  .measurement-card dd {
+    margin: 0;
+  }
+  .history-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem;
+    margin-top: 1.4rem;
+  }
+  .history-columns section {
+    border: 1px solid #dedee2;
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    background: #fdfdfd;
+  }
+  .history-columns h6 {
+    margin: 0 0 0.6rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8e8e93;
+  }
+  .history-columns p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #2c2c2e;
+    white-space: pre-wrap;
+  }
+  @media (max-width: 1024px) {
+    .section-card {
+      padding: 1.75rem;
+    }
+  }
+  @media (max-width: 720px) {
+    .patient-summary-card {
+      padding: 1.5rem;
+    }
+    .section-card {
+      padding: 1.5rem;
+    }
+    .section-actions {
+      padding: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if patient_summary %}
+<div class="patient-dashboard">
+  <div class="patient-summary-card">
+    <div class="summary-item">
+      <h4>{% trans "환자명" %}</h4>
+      <p>{{ patient_summary.name }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "등록번호" %}</h4>
+      <p class="pill">{{ patient_summary.reg_no }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "주민등록번호" %}</h4>
+      <p>{{ patient_summary.rrn }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "성별" %}</h4>
+      <p>{{ patient_summary.gender }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "생년월일" %}</h4>
+      <p>{{ patient_summary.birth_date|date:"Y-m-d" }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "등록일시" %}</h4>
+      <p>{{ patient_summary.created_at|date:"Y-m-d H:i" }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "전화번호" %}</h4>
+      <p>{{ patient_summary.phone|default:"-" }}</p>
+    </div>
+    <div class="summary-item">
+      <h4>{% trans "주소" %}</h4>
+      <p>{{ patient_summary.address|default:"-" }}</p>
+    </div>
+  </div>
+
+  <nav class="patient-nav">
+    <a href="#patient-prescriptions">{% trans "처방정보" %}</a>
+    <a href="#patient-clinical">{% trans "임상정보" %}</a>
+    <a href="#patient-external">{% trans "외부정보" %}</a>
+    <a href="#patient-history">{% trans "등록번호 이력" %}</a>
+  </nav>
+
+  <section id="patient-prescriptions" class="section-card">
+    <h3>{% trans "처방정보" %}</h3>
+    <div class="section-actions">
+      <h5>{% trans "새 처방 등록" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_prescription">
+        {{ new_prescription_form.non_field_errors }}
+        {{ new_prescription_form.as_p }}
+        <button type="submit">{% trans "등록" %}</button>
+      </form>
+    </div>
+
+    {% if patient_prescription_timeline %}
+      {% for bundle in patient_prescription_timeline %}
+      <div class="note-block">
+        <div class="note-meta">
+          <span>{% trans "내원일" %}: {{ bundle.note.visit_date|date:"Y-m-d H:i" }}</span>
+          <span>{% trans "임상노트 ID" %}: {{ bundle.note.pk }}</span>
+        </div>
+        {% if bundle.med_groups %}
+          {% for group in bundle.med_groups %}
+          <h4>{{ group.name }} <span class="badge">{{ bundle.note.primary_icd|default:"-" }}</span></h4>
+          <table class="patient-table">
+            <thead>
+              <tr>
+                <th>{% trans "코드" %}</th>
+                <th>{% trans "용량/횟수" %}</th>
+                <th>{% trans "기간" %}</th>
+                <th>{% trans "비고" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for entry in group.items %}
+              <tr>
+                <td>{{ entry.object.code|default:"-" }}</td>
+                <td>{{ entry.object.dose|default:"-" }} / {{ entry.object.freq|default:"-" }}</td>
+                <td>{{ entry.object.days }}{% trans "일" %}</td>
+                <td>{{ entry.object.notes|default:"" }}</td>
+              </tr>
+              <tr>
+                <td colspan="4">
+                  <form method="post" class="inline-form inline-edit-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="_action" value="update_prescription">
+                    <input type="hidden" name="prescription_id" value="{{ entry.object.pk }}">
+                    {{ entry.form.non_field_errors }}
+                    {{ entry.form.as_p }}
+                    <button type="submit">{% trans "수정" %}</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endfor %}
+        {% else %}
+          <div class="empty-hint">{% trans "등록된 처방이 없습니다." %}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-hint">{% trans "등록된 처방 내역이 없습니다." %}</div>
+    {% endif %}
+  </section>
+
+  <section id="patient-clinical" class="section-card">
+    <h3>{% trans "임상정보" %}</h3>
+    <datalist id="diagnosis-codes">
+      {% for item in diagnosis_master_items %}
+        <option value="{{ item.code }}">{{ item.code }} - {{ item.name }}</option>
+      {% endfor %}
+    </datalist>
+    <div class="section-actions">
+      <h5>{% trans "새 임상 노트 작성" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_clinical_note">
+        {{ new_note_form.non_field_errors }}
+        {{ new_note_form.as_p }}
+        <button type="submit">{% trans "저장" %}</button>
+      </form>
+    </div>
+
+    <div class="section-actions">
+      <h5>{% trans "진단 기록 추가" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_diagnosis">
+        {{ diagnosis_add_form.non_field_errors }}
+        {{ diagnosis_add_form.as_p }}
+        <button type="submit">{% trans "진단 추가" %}</button>
+      </form>
+    </div>
+
+    <div class="section-actions">
+      <h5>{% trans "약물 알레르기 등록" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_allergy">
+        {{ allergy_add_form.non_field_errors }}
+        {{ allergy_add_form.as_p }}
+        <button type="submit">{% trans "등록" %}</button>
+      </form>
+    </div>
+
+    <div class="section-actions">
+      <h5>{% trans "활력징후 기록" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_vitals">
+        {{ new_vitals_form.non_field_errors }}
+        {{ new_vitals_form.as_p }}
+        <button type="submit">{% trans "저장" %}</button>
+      </form>
+    </div>
+
+    <div class="section-actions">
+      <h5>{% trans "신체계측 기록" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_anthro">
+        {{ new_anthro_form.non_field_errors }}
+        {{ new_anthro_form.as_p }}
+        <button type="submit">{% trans "저장" %}</button>
+      </form>
+    </div>
+
+    {% if note_update_forms %}
+      {% for entry in note_update_forms %}
+        {% with note=entry.note form=entry.form %}
+        <div class="note-block">
+          <div class="note-meta">
+            <span>{% trans "내원일" %}: {{ note.visit_date|date:"Y-m-d H:i" }}</span>
+            <span>{% trans "주증상" %}: {{ note.chief_complaint|default:"-" }}</span>
+            <span>{% trans "주진단" %}: {{ note.primary_icd|default:"-" }}</span>
+          </div>
+
+          <h4>{% trans "진단 목록" %}</h4>
+          {% with diag_entries=entry.diagnoses %}
+            {% if diag_entries %}
+              {% for diag in diag_entries %}
+                <div class="note-meta">
+                  <span>{{ diag.object.code }} - {{ diag.object.name }}</span>
+                </div>
+                <form method="post" class="inline-form inline-edit-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="_action" value="update_diagnosis">
+                  <input type="hidden" name="diagnosis_id" value="{{ diag.object.pk }}">
+                  {{ diag.form.non_field_errors }}
+                  {{ diag.form.as_p }}
+                  <button type="submit">{% trans "진단 수정" %}</button>
+                </form>
+              {% endfor %}
+            {% else %}
+              <div class="empty-hint">{% trans "등록된 진단이 없습니다." %}</div>
+            {% endif %}
+          {% endwith %}
+
+          <h4 style="margin-top:1.4rem;">{% trans "약물 알레르기" %}</h4>
+          {% with allergy_entries=entry.allergies %}
+            {% if allergy_entries %}
+              {% for allergy in allergy_entries %}
+                <div class="note-meta">
+                  <span>{{ allergy.object.substance }} ({{ allergy.object.get_severity_display|default:"-" }})</span>
+                </div>
+                <form method="post" class="inline-form inline-edit-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="_action" value="update_allergy">
+                  <input type="hidden" name="allergy_id" value="{{ allergy.object.pk }}">
+                  {{ allergy.form.non_field_errors }}
+                  {{ allergy.form.as_p }}
+                  <button type="submit">{% trans "알레르기 수정" %}</button>
+                </form>
+              {% endfor %}
+            {% else %}
+              <div class="empty-hint">{% trans "등록된 알레르기 정보가 없습니다." %}</div>
+            {% endif %}
+          {% endwith %}
+
+          <h4 style="margin-top:1.4rem;">{% trans "활력징후" %}</h4>
+          {% if entry.vitals %}
+            <div class="measurement-grid">
+              <div class="measurement-card">
+                <h5>{% trans "혈압/맥박" %}</h5>
+                <dl>
+                  <dt>{% trans "혈압" %}</dt><dd>{{ entry.vitals.systolic|default:"-" }}/{{ entry.vitals.diastolic|default:"-" }} mmHg</dd>
+                  <dt>{% trans "맥박" %}</dt><dd>{{ entry.vitals.heart_rate|default:"-" }} bpm</dd>
+                  <dt>{% trans "호흡수" %}</dt><dd>{{ entry.vitals.resp_rate|default:"-" }} /min</dd>
+                  <dt>{% trans "체온" %}</dt><dd>{{ entry.vitals.temperature_c|default:"-" }} ℃</dd>
+                </dl>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-hint">{% trans "등록된 활력징후가 없습니다." %}</div>
+          {% endif %}
+          <form method="post" class="inline-form inline-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="_action" value="update_vitals">
+            <input type="hidden" name="note_id" value="{{ note.pk }}">
+            {{ entry.vitals_form.non_field_errors }}
+            {{ entry.vitals_form.as_p }}
+            <button type="submit">{% trans "활력징후 수정" %}</button>
+          </form>
+
+          <h4 style="margin-top:1.4rem;">{% trans "신체계측" %}</h4>
+          {% if entry.anthro %}
+            <div class="measurement-grid">
+              <div class="measurement-card">
+                <h5>{% trans "신장/체중" %}</h5>
+                <dl>
+                  <dt>{% trans "신장" %}</dt><dd>{{ entry.anthro.height_cm|default:"-" }} cm</dd>
+                  <dt>{% trans "체중" %}</dt><dd>{{ entry.anthro.weight_kg|default:"-" }} kg</dd>
+                  <dt>{% trans "BMI" %}</dt><dd>{{ entry.anthro.bmi|default:"-" }}</dd>
+                </dl>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-hint">{% trans "등록된 신체계측이 없습니다." %}</div>
+          {% endif %}
+          <form method="post" class="inline-form inline-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="_action" value="update_anthro">
+            <input type="hidden" name="note_id" value="{{ note.pk }}">
+            {{ entry.anthro_form.non_field_errors }}
+            {{ entry.anthro_form.as_p }}
+            <button type="submit">{% trans "신체계측 수정" %}</button>
+          </form>
+
+          <h4 style="margin-top:1.4rem;">{% trans "임상 노트 상세" %}</h4>
+          <div class="history-columns">
+            <section>
+              <h6>S</h6>
+              <p>{{ note.s_text|default:"-" }}</p>
+            </section>
+            <section>
+              <h6>O</h6>
+              <p>{{ note.o_text|default:"-" }}</p>
+            </section>
+            <section>
+              <h6>A</h6>
+              <p>{{ note.a_text|default:"-" }}</p>
+            </section>
+            <section>
+              <h6>P</h6>
+              <p>{{ note.p_text|default:"-" }}</p>
+            </section>
+          </div>
+
+          <form method="post" class="inline-form inline-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="_action" value="update_clinical_note">
+            <input type="hidden" name="note_id" value="{{ note.pk }}">
+            {{ form.non_field_errors }}
+            {{ form.as_p }}
+            <button type="submit">{% trans "임상 노트 수정" %}</button>
+          </form>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-hint">{% trans "등록된 임상 노트가 없습니다." %}</div>
+    {% endif %}
+  </section>
+
+  <section id="patient-external" class="section-card">
+    <h3>{% trans "외부정보" %}</h3>
+    <div class="section-actions">
+      <h5>{% trans "외부 의료기관 문서 등록" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_external_document">
+        {{ external_document_form.non_field_errors }}
+        {{ external_document_form.as_p }}
+        <button type="submit">{% trans "문서 추가" %}</button>
+      </form>
+    </div>
+    {% if external_document_entries %}
+      <div class="external-list">
+        {% for entry in external_document_entries %}
+          <div class="external-card">
+            <h5>{{ entry.object.title }}</h5>
+            <p>{% trans "발급기관" %}: {{ entry.object.source|default:"-" }}</p>
+            <p>{% trans "발급일" %}: {{ entry.object.recorded_at|default:"-" }}</p>
+            <p>{% trans "요약" %}: {{ entry.object.description|default:"-" }}</p>
+            {% if entry.object.file_url %}
+              <p><a href="{{ entry.object.file_url }}" target="_blank">{% trans "참조 링크" %}</a></p>
+            {% endif %}
+            <form method="post" class="inline-form inline-edit-form">
+              {% csrf_token %}
+              <input type="hidden" name="_action" value="update_external_document">
+              <input type="hidden" name="document_id" value="{{ entry.object.pk }}">
+              {{ entry.form.non_field_errors }}
+              {{ entry.form.as_p }}
+              <button type="submit">{% trans "문서 수정" %}</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-hint">{% trans "등록된 외부 문서가 없습니다." %}</div>
+    {% endif %}
+
+    <div class="section-actions" style="margin-top:2rem;">
+      <h5>{% trans "외부 검사결과 등록" %}</h5>
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="_action" value="add_external_result">
+        {{ external_result_form.non_field_errors }}
+        {{ external_result_form.as_p }}
+        <button type="submit">{% trans "검사결과 추가" %}</button>
+      </form>
+    </div>
+    {% if external_result_entries %}
+      <div class="external-list">
+        {% for entry in external_result_entries %}
+          <div class="external-card">
+            <h5>{{ entry.object.name }}</h5>
+            <p>{% trans "의료기관" %}: {{ entry.object.provider|default:"-" }}</p>
+            <p>{% trans "검사일" %}: {{ entry.object.recorded_at|default:"-" }}</p>
+            <p>{% trans "요약" %}: {{ entry.object.summary|default:"-" }}</p>
+            {% if entry.object.file_url %}
+              <p><a href="{{ entry.object.file_url }}" target="_blank">{% trans "참조 링크" %}</a></p>
+            {% endif %}
+            <form method="post" class="inline-form inline-edit-form">
+              {% csrf_token %}
+              <input type="hidden" name="_action" value="update_external_result">
+              <input type="hidden" name="result_id" value="{{ entry.object.pk }}">
+              {{ entry.form.non_field_errors }}
+              {{ entry.form.as_p }}
+              <button type="submit">{% trans "검사결과 수정" %}</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-hint">{% trans "등록된 외부 검사결과가 없습니다." %}</div>
+    {% endif %}
+  </section>
+
+  <section id="patient-history" class="section-card">
+    <h3>{% trans "등록번호 이력" %}</h3>
+    {% if patient_registration_history %}
+      <table class="patient-table">
+        <thead>
+          <tr>
+            <th>{% trans "등록번호" %}</th>
+            <th>{% trans "발급일시" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in patient_registration_history %}
+          <tr>
+            <td>{{ item.reg_no }}</td>
+            <td>{{ item.issued_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-hint">{% trans "등록번호 이력이 없습니다." %}</div>
+    {% endif %}
+  </section>
+</div>
+{% endif %}
+
+<details class="patient-edit">
+  <summary>{% trans "기본 정보 및 세부 항목 수정" %}</summary>
+  <div class="edit-wrapper">
+    {{ block.super }}
+  </div>
+</details>
+{% endblock %}

@@ -1,0 +1,7 @@
+Django
+django-simple-history
+django-auditlog
+django-import-export
+pandas
+openpyxl
+pyxlsb

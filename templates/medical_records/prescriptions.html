@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>처방 검색</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Helvetica Neue", Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 3.5rem clamp(1.5rem, 4vw, 4rem);
+        background: #f5f5f7;
+        color: #1d1d1f;
+        line-height: 1.6;
+      }
+      h2 {
+        margin: 0 0 2rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      form {
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1.25rem;
+        align-items: flex-end;
+        padding: 1.75rem 2rem;
+        background: #ffffff;
+        border: 1px solid #d2d2d7;
+        border-radius: 18px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.06);
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        font-size: 0.85rem;
+        color: #636366;
+      }
+      select,
+      input {
+        appearance: none;
+        border: 1px solid #d1d1d6;
+        border-radius: 12px;
+        padding: 0.75rem 0.95rem;
+        font-size: 0.95rem;
+        background: #fdfdfd;
+        color: inherit;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: #8e8e93;
+        box-shadow: 0 0 0 3px rgba(142, 142, 147, 0.2);
+      }
+      button[type="submit"] {
+        border: none;
+        border-radius: 999px;
+        padding: 0.85rem 1.85rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        background: #1d1d1f;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      button[type="submit"]:hover {
+        background: #2c2c2e;
+        transform: translateY(-1px);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      }
+      th,
+      td {
+        padding: 0.85rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e5ea;
+        font-size: 0.92rem;
+      }
+      th {
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        color: #3a3a3c;
+        background: #f9f9fb;
+      }
+      tbody tr:nth-child(even) {
+        background: #f7f7fa;
+      }
+      tbody tr:hover {
+        background: #f0f0f5;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      td:first-child,
+      th:first-child {
+        padding-left: 1.5rem;
+      }
+      td:last-child,
+      th:last-child {
+        padding-right: 1.5rem;
+      }
+      @media (max-width: 840px) {
+        form {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        button[type="submit"] {
+          align-self: flex-end;
+        }
+      }
+      @media (max-width: 640px) {
+        body {
+          padding: 2.5rem 1rem;
+        }
+        button[type="submit"] {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>처방 검색</h2>
+    <form method="get" action="">
+      <label>
+        유형
+        <select name="type">
+          <option value="">전체</option>
+          <option value="DRUG" {% if type == 'DRUG' %}selected{% endif %}>약물</option>
+          <option value="TEST" {% if type == 'TEST' %}selected{% endif %}>검사</option>
+          <option value="PROC" {% if type == 'PROC' %}selected{% endif %}>처치</option>
+        </select>
+      </label>
+      <label>
+        검색어
+        <input type="text" name="q" value="{{ q }}" placeholder="약명/코드/환자명" />
+      </label>
+      <button type="submit">검색</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>환자</th>
+          <th>내원일시</th>
+          <th>유형</th>
+          <th>명칭</th>
+          <th>코드</th>
+          <th>용량/횟수</th>
+          <th>기간</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in results %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.note.patient.name }} ({{ item.note.patient.reg_no }})</td>
+            <td>{{ item.note.visit_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ item.get_item_type_display }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.code }}</td>
+            <td>{{ item.dose }} / {{ item.freq }}</td>
+            <td>{{ item.days }}일</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8">검색 결과가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

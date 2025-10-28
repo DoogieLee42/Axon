@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <body>
+    <h1>마스터 파일 업로드</h1>
+    <form action="/master/import/" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="file" accept=".xlsx,.xlsb,.csv" required />
+      <select name="category">
+        <option value="ACT">행위 수가</option>
+        <option value="DRG">약제</option>
+        <option value="DX">진단</option>
+        <option value="ETC">기타</option>
+      </select>
+      <button type="submit">업로드 & 임포트</button>
+    </form>
+  </body>
+</html>
