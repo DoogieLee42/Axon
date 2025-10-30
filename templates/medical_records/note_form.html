@@ -180,6 +180,134 @@
       .selected-indicator strong {
         margin-right: 0.5rem;
       }
+      .claim-panel {
+        border-top: 1px solid #e5e5ea;
+        padding-top: 1.5rem;
+        display: grid;
+        gap: 1.5rem;
+      }
+      .claim-panel header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      .claim-panel header h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .claim-panel header p {
+        margin: 0;
+        font-size: 0.86rem;
+        color: #6e6e73;
+      }
+      .claim-sections {
+        display: grid;
+        gap: 1.4rem;
+      }
+      .claim-section {
+        background: #fdfdfd;
+        border: 1px solid #d2d2d7;
+        border-radius: 18px;
+        padding: 1.25rem;
+        display: grid;
+        gap: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .claim-section--error {
+        border-color: #ff453a;
+        box-shadow: 0 0 0 2px rgba(255, 69, 58, 0.15);
+      }
+      .claim-section-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .claim-section-header h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .claim-count {
+        font-size: 0.82rem;
+        color: #636366;
+        background: #f1f1f4;
+        border-radius: 999px;
+        padding: 0.2rem 0.65rem;
+      }
+      .claim-editor {
+        display: grid;
+        gap: 0.6rem;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      }
+      .claim-editor input {
+        border: 1px solid #d1d1d6;
+        border-radius: 12px;
+        padding: 0.65rem 0.8rem;
+        font-size: 0.88rem;
+        background: #ffffff;
+      }
+      .claim-editor input:focus {
+        outline: none;
+        border-color: #8e8e93;
+        box-shadow: 0 0 0 3px rgba(142, 142, 147, 0.18);
+      }
+      .claim-editor button {
+        border: none;
+        border-radius: 12px;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        background: #1d1d1f;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      .claim-editor button:hover {
+        background: #2c2c2e;
+        transform: translateY(-1px);
+      }
+      .claim-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86rem;
+        background: #ffffff;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .claim-table thead th {
+        text-align: left;
+        padding: 0.7rem 0.75rem;
+        border-bottom: 1px solid #e5e5ea;
+        background: #f4f5f8;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #5c5c5f;
+      }
+      .claim-table tbody td {
+        padding: 0.7rem 0.75rem;
+        border-bottom: 1px solid #f0f0f3;
+        vertical-align: top;
+      }
+      .claim-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .claim-table .claim-empty {
+        text-align: center;
+        color: #8a8a8f;
+        font-style: italic;
+      }
+      .claim-table button {
+        border: none;
+        background: none;
+        color: #ff3b30;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+      }
       .recent-notes {
         margin-top: 1.75rem;
         background: #ffffff;
@@ -227,6 +355,9 @@
         }
         .diagnosis-panel {
           padding: 1.5rem;
+        }
+        .claim-editor {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -276,6 +407,116 @@
               <span class="field-error">{{ form.note_text.errors|join:', ' }}</span>
             {% endif %}
           </label>
+
+          <section class="claim-panel" aria-labelledby="claim-panel-title">
+            <header>
+              <h3 id="claim-panel-title">청구 항목(처방)</h3>
+              <p>아래에 입력한 항목은 임상 노트 저장과 함께 처방 레코드로 등록되고 SAM 변환에서도 활용됩니다.</p>
+            </header>
+            <div class="claim-sections">
+              <div class="claim-section" data-claim-type="DRUG">
+                <div class="claim-section-header">
+                  <h4>약물 처방</h4>
+                  <span class="claim-count" data-claim-count="DRUG">0건</span>
+                </div>
+                <div class="claim-editor">
+                  <input type="text" placeholder="코드" data-claim-field="code" autocomplete="off" />
+                  <input type="text" placeholder="약품명" data-claim-field="name" autocomplete="off" />
+                  <input type="text" placeholder="1회 용량" data-claim-field="dose" autocomplete="off" />
+                  <input type="text" placeholder="1일 횟수" data-claim-field="freq" autocomplete="off" />
+                  <input type="text" placeholder="투여 경로" data-claim-field="route" autocomplete="off" />
+                  <input type="number" step="0.01" min="0" placeholder="총량" data-claim-field="qty" />
+                  <input type="text" placeholder="단위" data-claim-field="unit" autocomplete="off" />
+                  <input type="number" min="0" placeholder="일수" data-claim-field="days" />
+                  <input type="text" placeholder="비고" data-claim-field="notes" autocomplete="off" />
+                  <button type="button" data-claim-add>항목 추가</button>
+                </div>
+                <table class="claim-table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>코드</th>
+                      <th>약품명</th>
+                      <th>용량/투여</th>
+                      <th>총량</th>
+                      <th>기간(일)</th>
+                      <th>비고</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody data-claim-table data-type="DRUG" data-colspan="8">
+                    <tr><td colspan="8" class="claim-empty">등록된 항목이 없습니다.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="claim-section" data-claim-type="PROC">
+                <div class="claim-section-header">
+                  <h4>수술∙처치</h4>
+                  <span class="claim-count" data-claim-count="PROC">0건</span>
+                </div>
+                <div class="claim-editor">
+                  <input type="text" placeholder="코드" data-claim-field="code" autocomplete="off" />
+                  <input type="text" placeholder="명칭" data-claim-field="name" autocomplete="off" />
+                  <input type="number" step="0.01" min="0" placeholder="횟수" data-claim-field="qty" />
+                  <input type="text" placeholder="단위" data-claim-field="unit" autocomplete="off" />
+                  <input type="text" placeholder="시술 부위" data-claim-field="site" autocomplete="off" />
+                  <input type="text" placeholder="마취" data-claim-field="anesthesia" autocomplete="off" />
+                  <input type="text" placeholder="비고" data-claim-field="notes" autocomplete="off" />
+                  <button type="button" data-claim-add>항목 추가</button>
+                </div>
+                <table class="claim-table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>코드</th>
+                      <th>명칭</th>
+                      <th>횟수</th>
+                      <th>단위</th>
+                      <th>비고</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody data-claim-table data-type="PROC" data-colspan="7">
+                    <tr><td colspan="7" class="claim-empty">등록된 항목이 없습니다.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="claim-section" data-claim-type="TEST">
+                <div class="claim-section-header">
+                  <h4>기타 처방∙검사</h4>
+                  <span class="claim-count" data-claim-count="TEST">0건</span>
+                </div>
+                <div class="claim-editor">
+                  <input type="text" placeholder="코드" data-claim-field="code" autocomplete="off" />
+                  <input type="text" placeholder="명칭" data-claim-field="name" autocomplete="off" />
+                  <input type="number" step="0.01" min="0" placeholder="횟수/수량" data-claim-field="qty" />
+                  <input type="text" placeholder="단위" data-claim-field="unit" autocomplete="off" />
+                  <input type="text" placeholder="검체" data-claim-field="specimen" autocomplete="off" />
+                  <input type="text" placeholder="우선순위" data-claim-field="priority" autocomplete="off" />
+                  <input type="text" placeholder="비고" data-claim-field="notes" autocomplete="off" />
+                  <button type="button" data-claim-add>항목 추가</button>
+                </div>
+                <table class="claim-table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>코드</th>
+                      <th>명칭</th>
+                      <th>수량</th>
+                      <th>단위</th>
+                      <th>비고</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody data-claim-table data-type="TEST" data-colspan="7">
+                    <tr><td colspan="7" class="claim-empty">등록된 항목이 없습니다.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
 
           <div class="actions">
             <button type="submit">임상 노트 저장</button>
@@ -382,6 +623,282 @@
         });
 
         restoreFromHidden();
+      })();
+
+      (function() {
+        const formEl = document.querySelector('form');
+        const payloadInput = document.getElementById('id_claim_payload');
+        const sections = Array.from(document.querySelectorAll('.claim-section'));
+        if (!formEl || !payloadInput || !sections.length) {
+          return;
+        }
+
+        const allowedTypes = new Set(['DRUG','PROC','TEST']);
+        let claimItems = [];
+
+        function makeId() {
+          if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID();
+          }
+          return `claim-${Math.random().toString(36).slice(2, 11)}`;
+        }
+
+        function toNumber(value) {
+          if (value === null || value === undefined || value === '') {
+            return null;
+          }
+          const num = Number(value);
+          return Number.isFinite(num) ? num : null;
+        }
+
+        function toInt(value) {
+          if (value === null || value === undefined || value === '') {
+            return null;
+          }
+          const num = parseInt(value, 10);
+          return Number.isFinite(num) ? num : null;
+        }
+
+        function formatNumber(value) {
+          if (value === null || value === undefined) {
+            return '-';
+          }
+          const num = Number(value);
+          if (!Number.isFinite(num)) {
+            return '-';
+          }
+          return Number.isInteger(num) ? num.toString() : num.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        function escapeHtml(value) {
+          return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        }
+
+        function normaliseRaw(raw, type, existingId) {
+          let normalizedType = (type || '').toUpperCase();
+          if (!allowedTypes.has(normalizedType)) {
+            normalizedType = 'PROC';
+          }
+          const name = (raw.name || '').trim();
+          if (!name) {
+            return null;
+          }
+          const item = {
+            id: existingId || makeId(),
+            type: normalizedType,
+            code: (raw.code || '').trim(),
+            name,
+            qty: toNumber(raw.qty),
+            unit: (raw.unit || '').trim(),
+            dose: (raw.dose || '').trim(),
+            freq: (raw.freq || '').trim(),
+            route: (raw.route || '').trim(),
+            days: toInt(raw.days),
+            notes: (raw.notes || '').trim(),
+            specimen: (raw.specimen || '').trim(),
+            priority: (raw.priority || '').trim(),
+            site: (raw.site || '').trim(),
+            anesthesia: (raw.anesthesia || '').trim(),
+          };
+          return item;
+        }
+
+        function parseInitial() {
+          if (!payloadInput.value) {
+            claimItems = [];
+            return;
+          }
+          try {
+            const parsed = JSON.parse(payloadInput.value);
+            if (Array.isArray(parsed)) {
+              claimItems = parsed
+                .map((entry) => {
+                  if (!entry || typeof entry !== 'object') {
+                    return null;
+                  }
+                  return normaliseRaw(entry, entry.type, entry.id);
+                })
+                .filter(Boolean);
+            }
+          } catch (error) {
+            console.warn('Failed to parse claim payload', error);
+            claimItems = [];
+          }
+        }
+
+        function syncHidden() {
+          payloadInput.value = JSON.stringify(claimItems);
+        }
+
+        function formatDrugDose(item) {
+          const parts = [item.dose, item.freq, item.route].filter((value) => value);
+          return parts.length ? parts.map(escapeHtml).join(' · ') : '-';
+        }
+
+        function formatDrugQty(item) {
+          const qtyLabel = formatNumber(item.qty);
+          if (qtyLabel === '-') {
+            return item.unit ? escapeHtml(item.unit) : '-';
+          }
+          const unit = item.unit ? ` ${item.unit}` : '';
+          return escapeHtml(`${qtyLabel}${unit}`);
+        }
+
+        function formatProcNotes(item) {
+          const parts = [];
+          if (item.notes) parts.push(item.notes);
+          if (item.site) parts.push(`부위:${item.site}`);
+          if (item.anesthesia) parts.push(`마취:${item.anesthesia}`);
+          if (!parts.length) {
+            return '-';
+          }
+          return parts.map(escapeHtml).join('<br />');
+        }
+
+        function formatTestNotes(item) {
+          const parts = [];
+          if (item.notes) parts.push(item.notes);
+          if (item.specimen) parts.push(`검체:${item.specimen}`);
+          if (item.priority) parts.push(`우선:${item.priority}`);
+          if (!parts.length) {
+            return '-';
+          }
+          return parts.map(escapeHtml).join('<br />');
+        }
+
+        const rowTemplates = {
+          DRUG(item, index) {
+            const daysLabel = item.days !== null && item.days !== undefined ? escapeHtml(formatNumber(item.days)) : '-';
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(item.code || '-')}</td>
+                <td>${escapeHtml(item.name)}</td>
+                <td>${formatDrugDose(item)}</td>
+                <td>${formatDrugQty(item)}</td>
+                <td>${daysLabel}</td>
+                <td>${escapeHtml(item.notes || '')}</td>
+                <td><button type="button" data-claim-remove="${item.id}">삭제</button></td>
+              </tr>
+            `;
+          },
+          PROC(item, index) {
+            const qtyLabel = escapeHtml(formatNumber(item.qty));
+            const unitLabel = item.unit ? escapeHtml(item.unit) : '-';
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(item.code || '-')}</td>
+                <td>${escapeHtml(item.name)}</td>
+                <td>${qtyLabel}</td>
+                <td>${unitLabel}</td>
+                <td>${formatProcNotes(item)}</td>
+                <td><button type="button" data-claim-remove="${item.id}">삭제</button></td>
+              </tr>
+            `;
+          },
+          TEST(item, index) {
+            const qtyLabel = escapeHtml(formatNumber(item.qty));
+            const unitLabel = item.unit ? escapeHtml(item.unit) : '-';
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(item.code || '-')}</td>
+                <td>${escapeHtml(item.name)}</td>
+                <td>${qtyLabel}</td>
+                <td>${unitLabel}</td>
+                <td>${formatTestNotes(item)}</td>
+                <td><button type="button" data-claim-remove="${item.id}">삭제</button></td>
+              </tr>
+            `;
+          }
+        };
+
+        function renderTables() {
+          sections.forEach((section) => {
+            const type = section.dataset.claimType;
+            const tbody = section.querySelector('[data-claim-table]');
+            const countBadge = section.querySelector('[data-claim-count]');
+            if (!type || !tbody) {
+              return;
+            }
+            const rows = claimItems.filter((item) => item.type === type);
+            if (countBadge) {
+              countBadge.textContent = `${rows.length}건`;
+            }
+            if (!rows.length) {
+              const colspan = parseInt(tbody.dataset.colspan || '6', 10);
+              tbody.innerHTML = `<tr><td colspan="${colspan}" class="claim-empty">등록된 항목이 없습니다.</td></tr>`;
+              return;
+            }
+            const renderer = rowTemplates[type];
+            tbody.innerHTML = rows.map((item, index) => renderer(item, index)).join('');
+          });
+        }
+
+        function render() {
+          renderTables();
+          syncHidden();
+        }
+
+        sections.forEach((section) => {
+          const type = section.dataset.claimType;
+          const addButton = section.querySelector('[data-claim-add]');
+          const inputs = Array.from(section.querySelectorAll('[data-claim-field]'));
+          if (!addButton || !inputs.length || !type) {
+            return;
+          }
+
+          function addItem() {
+            const raw = {};
+            inputs.forEach((input) => {
+              raw[input.dataset.claimField] = input.value;
+            });
+            const item = normaliseRaw(raw, type);
+            if (!item) {
+              section.classList.add('claim-section--error');
+              setTimeout(() => section.classList.remove('claim-section--error'), 600);
+              return;
+            }
+            section.classList.remove('claim-section--error');
+            claimItems.push(item);
+            render();
+            inputs.forEach((input) => {
+              input.value = '';
+            });
+            inputs[0]?.focus();
+          }
+
+          addButton.addEventListener('click', addItem);
+          inputs.forEach((input) => {
+            input.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                addItem();
+              }
+            });
+          });
+        });
+
+        document.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-claim-remove]');
+          if (!button) {
+            return;
+          }
+          const id = button.dataset.claimRemove;
+          claimItems = claimItems.filter((item) => item.id !== id);
+          render();
+        });
+
+        formEl.addEventListener('submit', syncHidden);
+
+        parseInitial();
+        render();
       })();
     </script>
   </body>

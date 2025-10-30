@@ -58,6 +58,21 @@ python manage.py migrate master_files --database=master_files
 - 의무기록 처방 조회: `/orders/`
 - 마스터 파일 업로드/마이그레이션: `/master/upload/`
 
+## REST API
+
+마스터 파일 자원은 RESTful 엔드포인트로도 접근할 수 있습니다. 모든 응답은 JSON 형식이며, 인증·권한 레이어는 기존 Django 설정(세션/토큰 등)에 맞춰 추가하면 됩니다.
+
+- `GET /api/master/items/` : 마스터 항목 목록 조회 (`category`, `search`, `page`, `page_size` 지원)
+- `POST /api/master/items/` : 단일 마스터 항목 생성 (body 예시: `{"code":"AA001","name":"수술","category":"ACT"}`)
+- `GET /api/master/items/<id>/` : 개별 항목 상세 조회
+- `PATCH /api/master/items/<id>/` : 항목 부분 수정 (허용 필드: `code`, `name`, `category`, `price`, `unit`, `raw_fields`)
+- `DELETE /api/master/items/<id>/` : 항목 삭제
+- `GET /api/master/uploads/` : 업로드 이력 조회 (`limit` 파라미터 지원)
+- `POST /api/master/uploads/` : 파일 업로드 및 import 실행 (`multipart/form-data`로 `file`, `category` 전송)
+- `GET /api/master/uploads/<id>/` : 특정 업로드 이력 상세 조회
+
+기존 `/master/import/` 경로는 업로드 화면 호환을 위해 유지되지만, 신규 기능 개발 시 `/api/master/…` 경로 사용을 권장합니다.
+
 위 URL은 모두 `django.contrib.auth` 로그인 이후 접근하는 것을 전제로 하고 있습니다.
 
 필요 시 `DATABASES` 항목에서 각 파일 경로를 다른 RDBMS로 교체할 수 있으며, 라우터 설정만 유지하면 동일하게 동작합니다.

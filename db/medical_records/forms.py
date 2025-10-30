@@ -23,6 +23,10 @@ class ClinicalNoteForm(forms.ModelForm):
             }
         ),
     )
+    claim_payload = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False,
+    )
 
     class Meta:
         model = ClinicalNote
@@ -50,6 +54,9 @@ class ClinicalNoteForm(forms.ModelForm):
         self.fields['primary_icd'].required = False
 
         self.fields['note_text'].initial = self._build_note_text(self.instance)
+
+        if not self.is_bound:
+            self.fields['claim_payload'].initial = self.initial.get('claim_payload', '[]')
 
     def _build_note_text(self, instance):
         if not instance or not instance.pk:
