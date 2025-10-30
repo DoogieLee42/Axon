@@ -1,80 +1,100 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardContent,
+  Chip,
+  CircularProgress,
   Divider,
   Grid,
-  IconButton,
   List,
   ListItem,
   ListItemText,
   Stack,
-  TextField,
   Typography
 } from '@mui/material';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useNavigate, useParams } from 'react-router-dom';
+import usePatientDetail from '../hooks/usePatientDetail';
 import { usePatientContext } from '../context/PatientContext';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
-import MedicationIcon from '@mui/icons-material/Medication';
+import {
+  AnthropometricsSnapshot,
+  ClinicalNoteSummary,
+  DiagnosisSummary,
+  PatientSummary,
+  PrescriptionSummary,
+  VitalSnapshot
+} from '../types/patient';
 
-const defaultVitals = {
-  bp: '128/80 mmHg',
-  pulse: '78 bpm',
-  temp: '36.7 ℃',
-  resp: '18 bpm',
-  height: '168 cm',
-  weight: '62 kg',
-  bmi: '21.9 kg/m²'
+const formatDate = (value?: string | null) => {
+  if (!value) {
+    return '-';
+  }
+  try {
+    return format(new Date(value), 'PPP', { locale: ko });
+  } catch (err) {
+    return value;
+  }
 };
 
-const defaultLabs = [
-  { name: 'CBC', value: '정상', date: '2025-09-20' },
-  { name: '간기능', value: '정상', date: '2025-09-01' },
-  { name: 'HbA1c', value: '6.2%', date: '2025-08-15' }
-];
-
-const availableSlots = ['09:30', '10:00', '10:30', '11:00', '13:30', '14:00'];
+const formatGender = (gender: PatientSummary['gender']) => {
+  switch (gender) {
+    case 'M':
+      return '남';
+    case 'F':
+      return '여';
+    default:
+      return '기타';
+  }
+};
 
 const PatientDetailPage = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
-  const { getPatient } = usePatientContext();
-  const patient = patientId ? getPatient(patientId) : undefined;
+  const numericId = patientId ? Number(patientId) : null;
+  const { findPatient } = usePatientContext();
+  const { detail, loading, error } = usePatientDetail(numericId);
 
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [newMedication, setNewMedication] = useState('Acetaminophen 500mg');
-  const [diagnosis, setDiagnosis] = useState('KCD 코드 또는 병명');
-  const [notes, setNotes] = useState('의무기록을 자유 형식으로 입력하세요');
-  const [showSaved, setShowSaved] = useState(false);
+  const fallbackPatient = numericId ? findPatient(numericId) : undefined;
+  const patient = detail?.patient ?? fallbackPatient;
 
-  const formattedDate = useMemo(
-    () => format(selectedDate, 'PPP (EEE)', { locale: ko }),
-    [selectedDate]
-  );
+  const latestVitals = detail?.latestVitals ?? null;
+  const latestAnthro = detail?.latestAnthropometrics ?? null;
 
-  const isoDate = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  const mergedDiagnoses = useMemo<DiagnosisSummary[]>(() => {
+    if (!detail) {
+      return [];
+    }
+    return detail.notes.flatMap((note) => note.diagnoses);
+  }, [detail]);
 
-  if (!patient) {
+  const mergedPrescriptions = useMemo<PrescriptionSummary[]>(() => {
+    if (!detail) {
+      return [];
+    }
+    return detail.notes.flatMap((note) => note.prescriptions);
+  }, [detail]);
+
+  const latestNote = detail?.notes[0];
+
+  if (loading && !patient) {
     return (
-      <Stack spacing={2}>
-        <Button variant="text" onClick={() => navigate('/patients')}>
-          ← 환자 목록으로 돌아가기
-        </Button>
-        <Alert severity="warning">요청하신 환자 정보를 찾을 수 없습니다.</Alert>
+      <Stack spacing={3} alignItems="center" justifyContent="center" sx={{ minHeight: '60vh' }}>
+        <CircularProgress />
+        <Typography color="text.secondary">환자 정보를 불러오는 중입니다…</Typography>
       </Stack>
     );
   }
 
-  const confirmOrder = () => {
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 3000);
-  };
+  if (!patient) {
+    return (
+      <Stack spacing={2}>
+        <Alert severity="warning">요청하신 환자 정보를 찾을 수 없습니다.</Alert>
+      </Stack>
+    );
+  }
 
   return (
     <Stack spacing={4}>
@@ -84,15 +104,22 @@ const PatientDetailPage = () => {
             {patient.name} 환자 차트
           </Typography>
           <Typography color="text.secondary">
-            주민등록번호 {patient.registrationNumber} · 연락처 {patient.phone}
+            등록번호 {patient.regNo} · 주민등록번호 {patient.rrn}
           </Typography>
         </div>
-        <Button variant="outlined" onClick={() => navigate('/patients')}>
-          환자 목록으로
-        </Button>
+        <Typography
+          variant="body2"
+          sx={{ cursor: 'pointer' }}
+          color="primary"
+          onClick={() => navigate('/patients')}
+        >
+          ← 환자 목록으로 돌아가기
+        </Typography>
       </Stack>
 
-      <Grid container spacing={3}>
+      {error && <Alert severity="error">{error}</Alert>}
+
+      <Grid container spacing={3} alignItems="stretch">
         <Grid item xs={12} md={4}>
           <Stack spacing={3}>
             <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
@@ -101,11 +128,12 @@ const PatientDetailPage = () => {
                   환자정보
                 </Typography>
                 <Stack spacing={1.5}>
-                  <InfoRow label="생년월일" value={patient.birthDate} />
-                  <InfoRow label="성별" value={patient.sex} />
-                  <InfoRow label="연락처" value={patient.phone} />
-                  <InfoRow label="등록번호" value={patient.registrationNumber} />
-                  <InfoRow label="주치의" value={patient.primaryPhysician} />
+                  <InfoRow label="생년월일" value={formatDate(patient.birthDate)} />
+                  <InfoRow label="나이" value={`${patient.age}세`} />
+                  <InfoRow label="성별" value={formatGender(patient.gender)} />
+                  <InfoRow label="연락처" value={patient.phone || '-'} />
+                  <InfoRow label="주소" value={patient.address || '-'} />
+                  <InfoRow label="등록일" value={formatDate(patient.createdAt)} />
                 </Stack>
               </CardContent>
             </Card>
@@ -113,41 +141,35 @@ const PatientDetailPage = () => {
             <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  활력징후 / 신체계측
+                  최신 활력징후
                 </Typography>
-                <Grid container spacing={2}>
-                  {Object.entries(defaultVitals).map(([key, value]) => (
-                    <Grid key={key} item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        {key.toUpperCase()}
-                      </Typography>
-                      <Typography variant="h6" fontWeight={700}>
-                        {value}
-                      </Typography>
-                    </Grid>
-                  ))}
-                </Grid>
+                {latestVitals ? (
+                  <VitalsGrid vitals={latestVitals} anthropometrics={latestAnthro} />
+                ) : (
+                  <Typography color="text.secondary">활력징후 기록이 없습니다.</Typography>
+                )}
               </CardContent>
             </Card>
 
             <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  검사결과
+                  외부 문서
                 </Typography>
-                <List dense>
-                  {defaultLabs.map((lab) => (
-                    <ListItem key={lab.name} disablePadding sx={{ mb: 1 }}>
-                      <ListItemText
-                        primary={lab.name}
-                        secondary={`${lab.value} · ${format(new Date(lab.date), 'yyyy-MM-dd')}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-                <Button fullWidth variant="outlined">
-                  조회하기
-                </Button>
+                {detail?.documents?.length ? (
+                  <List dense>
+                    {detail.documents.map((doc) => (
+                      <ListItem key={doc.id} disablePadding sx={{ mb: 1 }}>
+                        <ListItemText
+                          primary={doc.title}
+                          secondary={`${doc.source || '미상'} · ${formatDate(doc.recordedAt)}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography color="text.secondary">외부 문서가 없습니다.</Typography>
+                )}
               </CardContent>
             </Card>
           </Stack>
@@ -157,62 +179,18 @@ const PatientDetailPage = () => {
           <Stack spacing={3}>
             <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
               <CardContent>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    진료 날짜 선택
-                  </Typography>
-                  <IconButton color="primary">
-                    <CalendarMonthIcon />
-                  </IconButton>
-                </Stack>
-                <Typography variant="h5" fontWeight={700} gutterBottom>
-                  {formattedDate}
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  최근 진료기록
                 </Typography>
-                <TextField
-                  type="date"
-                  value={isoDate}
-                  onChange={(event) => {
-                    const next = event.target.value ? new Date(event.target.value) : new Date();
-                    setSelectedDate(next);
-                  }}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ mb: 2, width: '60%' }}
-                />
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {availableSlots.map((slot) => (
-                    <Button
-                      key={slot}
-                      variant="contained"
-                      color="inherit"
-                      sx={{
-                        backgroundColor: '#eef2ff',
-                        color: '#312e81',
-                        '&:hover': { backgroundColor: '#e0e7ff' }
-                      }}
-                    >
-                      {slot}
-                    </Button>
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
-
-            <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                  <NoteAddIcon color="primary" />
-                  <Typography variant="subtitle2" color="text.secondary">
-                    의무기록
-                  </Typography>
-                </Stack>
-                <TextField
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  multiline
-                  minRows={5}
-                  fullWidth
-                  placeholder="의무기록을 입력하세요"
-                />
+                {detail?.notes?.length ? (
+                  <Stack spacing={3}>
+                    {detail.notes.map((note) => (
+                      <ClinicalNoteCard key={note.id} note={note} />
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography color="text.secondary">임상 노트가 없습니다.</Typography>
+                )}
               </CardContent>
             </Card>
           </Stack>
@@ -222,25 +200,24 @@ const PatientDetailPage = () => {
           <Stack spacing={3}>
             <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
               <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                  <MedicationIcon color="primary" />
-                  <Typography variant="subtitle2" color="text.secondary">
-                    처방 입력
-                  </Typography>
-                </Stack>
-                <TextField
-                  label="약물"
-                  fullWidth
-                  value={newMedication}
-                  onChange={(event) => setNewMedication(event.target.value)}
-                />
-                <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={confirmOrder}>
-                  처방전 생성
-                </Button>
-                {showSaved && (
-                  <Alert sx={{ mt: 2 }} severity="success">
-                    처방이 임시저장되었습니다.
-                  </Alert>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  최근 처방
+                </Typography>
+                {mergedPrescriptions.length ? (
+                  <List dense>
+                    {mergedPrescriptions.map((item) => (
+                      <ListItem key={`${item.id}-${item.name}`} disablePadding sx={{ mb: 1 }}>
+                        <ListItemText
+                          primary={item.name}
+                          secondary={[item.dose, item.freq, item.days ? `${item.days}일` : '']
+                            .filter(Boolean)
+                            .join(' · ')}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography color="text.secondary">처방 내역이 없습니다.</Typography>
                 )}
               </CardContent>
             </Card>
@@ -250,14 +227,41 @@ const PatientDetailPage = () => {
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   진단
                 </Typography>
-                <TextField
-                  label="KCD 코드 또는 병명"
-                  value={diagnosis}
-                  onChange={(event) => setDiagnosis(event.target.value)}
-                  fullWidth
-                />
+                {mergedDiagnoses.length ? (
+                  <Stack spacing={1}>
+                    {mergedDiagnoses.map((diagnosis) => (
+                      <Chip
+                        key={`${diagnosis.id}-${diagnosis.code}`}
+                        label={`${diagnosis.code} · ${diagnosis.name}`}
+                        sx={{ justifyContent: 'flex-start' }}
+                      />
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography color="text.secondary">진단 기록이 없습니다.</Typography>
+                )}
               </CardContent>
             </Card>
+
+            {latestNote?.allergies?.length ? (
+              <Card sx={{ borderRadius: 3, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+                <CardContent>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    알레르기
+                  </Typography>
+                  <List dense>
+                    {latestNote.allergies.map((allergy) => (
+                      <ListItem key={allergy.id} disablePadding sx={{ mb: 1 }}>
+                        <ListItemText
+                          primary={allergy.substance}
+                          secondary={[allergy.reaction, allergy.severity].filter(Boolean).join(' · ')}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </Card>
+            ) : null}
           </Stack>
         </Grid>
       </Grid>
@@ -279,6 +283,67 @@ const InfoRow = ({ label, value }: InfoRowProps) => (
       {value}
     </Typography>
     <Divider sx={{ mt: 1 }} />
+  </Box>
+);
+
+const VitalsGrid = ({
+  vitals,
+  anthropometrics
+}: {
+  vitals: VitalSnapshot;
+  anthropometrics: AnthropometricsSnapshot | null;
+}) => {
+  const metrics: { label: string; value: string }[] = [
+    { label: '혈압', value: vitals.systolic && vitals.diastolic ? `${vitals.systolic}/${vitals.diastolic} mmHg` : '-' },
+    { label: '심박수', value: vitals.heartRate ? `${vitals.heartRate} bpm` : '-' },
+    { label: '호흡수', value: vitals.respRate ? `${vitals.respRate} /min` : '-' },
+    { label: '체온', value: vitals.temperatureC ? `${vitals.temperatureC.toFixed(1)} ℃` : '-' },
+    { label: '산소포화도', value: vitals.spo2 ? `${vitals.spo2}%` : '-' },
+    { label: '통증점수', value: vitals.painScore ? `${vitals.painScore}` : '-' },
+    {
+      label: '신장',
+      value: anthropometrics?.heightCm ? `${anthropometrics.heightCm.toFixed(1)} cm` : '-'
+    },
+    {
+      label: '체중',
+      value: anthropometrics?.weightKg ? `${anthropometrics.weightKg.toFixed(1)} kg` : '-'
+    },
+    { label: 'BMI', value: anthropometrics?.bmi ? anthropometrics.bmi.toFixed(1) : '-' }
+  ];
+
+  return (
+    <Grid container spacing={2}>
+      {metrics.map((metric) => (
+        <Grid item xs={6} key={metric.label}>
+          <Typography variant="body2" color="text.secondary">
+            {metric.label}
+          </Typography>
+          <Typography variant="h6" fontWeight={700}>
+            {metric.value}
+          </Typography>
+        </Grid>
+      ))}
+    </Grid>
+  );
+};
+
+const ClinicalNoteCard = ({ note }: { note: ClinicalNoteSummary }) => (
+  <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 2, p: 2 }}>
+    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+      {formatDate(note.visitDate)} · {note.chiefComplaint || '주증상 미입력'}
+    </Typography>
+    <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }} gutterBottom>
+      {note.subjective || 'S 미입력'}
+    </Typography>
+    <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }} gutterBottom>
+      {note.objective || 'O 미입력'}
+    </Typography>
+    <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }} gutterBottom>
+      {note.assessment || 'A 미입력'}
+    </Typography>
+    <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+      {note.plan || 'P 미입력'}
+    </Typography>
   </Box>
 );
 

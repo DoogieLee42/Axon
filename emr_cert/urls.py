@@ -3,6 +3,7 @@ from django.urls import include, path
 
 from db.medical_records.views import clinical_note_create, prescriptions_list
 from db.patients.views import advanced_search
+from db.patients.api import patient_collection, patient_detail
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -14,4 +15,6 @@ urlpatterns = [
         "api/master/",
         include(("db.master_files.api_urls", "master_files_api"), namespace="master_files_api"),
     ),
+    path("api/patients/", patient_collection, name="patient_collection"),
+    path("api/patients/<int:pk>/", patient_detail, name="patient_detail"),
 ]
