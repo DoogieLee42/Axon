@@ -32,11 +32,13 @@ export interface AnthropometricsSnapshot {
 
 export interface MedicationSummary {
   id: number;
+  code: string;
   name: string;
   dose: string;
   freq: string;
   route: string;
   durationDays: number;
+  notes: string;
 }
 
 export interface DiagnosisSummary {
@@ -58,9 +60,13 @@ export interface AllergySummary {
 export interface PrescriptionSummary {
   id: number;
   itemType: string;
+  code: string;
   name: string;
+  qty: number | null;
+  unit: string | null;
   dose: string;
   freq: string;
+  route: string;
   days: number;
   notes: string;
 }
@@ -74,6 +80,9 @@ export interface ClinicalNoteSummary {
   assessment: string;
   plan: string;
   primaryIcd: string;
+  narrative: string;
+  socialHistory: string;
+  familyHistory: string;
   medications: MedicationSummary[];
   diagnoses: DiagnosisSummary[];
   allergies: AllergySummary[];
@@ -91,12 +100,22 @@ export interface ExternalDocumentSummary {
   fileUrl: string;
 }
 
+export interface ExternalResultSummary {
+  id: number;
+  name: string;
+  provider: string;
+  recordedAt: string | null;
+  summary: string;
+  fileUrl: string;
+}
+
 export interface PatientDetailResponse {
   patient: PatientSummary;
   notes: ClinicalNoteSummary[];
   latestVitals: VitalSnapshot | null;
   latestAnthropometrics: AnthropometricsSnapshot | null;
   documents: ExternalDocumentSummary[];
+  labResults: ExternalResultSummary[];
 }
 
 export interface CreatePatientInput {
@@ -106,4 +125,13 @@ export interface CreatePatientInput {
   rrn: string;
   phone: string;
   address: string;
+}
+
+export interface MasterItemSummary {
+  id: number;
+  code: string;
+  name: string;
+  category: string;
+  price: number | null;
+  unit: string | null;
 }

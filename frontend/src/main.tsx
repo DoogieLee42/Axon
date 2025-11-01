@@ -1,8 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 import App from './App';
 import './styles.css';
+
+dayjs.locale('ko');
 
 const theme = createTheme({
   palette: {
@@ -18,8 +24,10 @@ const theme = createTheme({
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
+        <CssBaseline />
+        <App />
+      </LocalizationProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

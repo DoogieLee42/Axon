@@ -22,7 +22,9 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/patients/');
+      const response = await fetch('/api/patients/', {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('환자 목록을 불러오지 못했습니다.');
       }
@@ -49,6 +51,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
             'Content-Type': 'application/json',
             'X-CSRFToken': getCsrfToken()
           },
+          credentials: 'include',
           body: JSON.stringify(input)
         });
 

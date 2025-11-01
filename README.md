@@ -14,7 +14,8 @@ emr_cert_rx2/
 ├─ templates/              # 앱 단위 템플릿 (예: patients, medical_records)
 ├─ masterfile_migration/   # 마스터 파일 변환용 별도 도구(선택 사용)
 ├─ manage.py               # 메인 프로젝트 진입점
-└─ requirements.txt
+├─ requirements.txt
+└─ frontend/               # React 기반 SPA (Vite + TypeScript)
 ```
 
 ## 데이터베이스 분리 설계
@@ -57,6 +58,44 @@ python manage.py migrate master_files --database=master_files
 - 임상 노트 작성: `/clinical-notes/new/`
 - 의무기록 처방 조회: `/orders/`
 - 마스터 파일 업로드/마이그레이션: `/master/upload/`
+
+## React SPA 구조
+
+`frontend/` 디렉터리는 Vite 기반의 React 애플리케이션으로, 환자 관리 화면을 SPA 형식으로 제공합니다.  
+개발 서버(Vite)로 구동할 수도 있고, 빌드된 정적 파일을 Django가 직접 서빙할 수도 있습니다.
+
+### 개발 모드
+
+1. 백엔드 실행
+   ```bash
+   python manage.py runserver
+   ```
+2. 프론트엔드 실행
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Vite 개발 서버는 자동으로 `/api/*` 요청을 `http://localhost:8000` 으로 프록시하여 Django 백엔드를 호출합니다.
+
+### 프로덕션/테스트 모드
+
+1. 프론트엔드 빌드
+   ```bash
+   cd frontend
+   npm run build
+   ```
+2. Django 정적 파일 경로에 Vite 빌드 결과가 자동으로 포함되며, `/patients`, `/patients/<id>` 등 SPA 경로를 Django가 직접 제공합니다.
+
+빌드가 완료되면 `/patients` URL로 접근했을 때 React 앱이 렌더링되며, 인증 쿠키는 자동으로 포함되어 REST API 호출이 가능합니다.
+
+> 기존 Django 템플릿 기반 화면(`templates/`)은 참고 및 호환성 목적의 레거시 UI로 유지되며, 향후 기능 점검은 React SPA를 통해 진행합니다.
+
+### 환자 차트 입력 기능
+
+- 환자 상세 화면(`/patients/:id`)에서 의무기록·사회력·가족력을 자유롭게 작성할 수 있습니다.
+- 진단과 처방 입력 시 마스터 데이터(`KCD`, `수가`, `약가`)와 연동된 자동완성 검색을 통해 항목을 선택합니다.
+- 저장된 내용은 Django API(`/api/patients/<id>/`) 응답에 포함되며, 신규 임상 노트는 `/api/patients/<id>/notes/` 엔드포인트를 통해 생성됩니다.
 
 ## REST API
 

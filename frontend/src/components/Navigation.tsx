@@ -31,6 +31,19 @@ const Navigation = () => {
         >
           <ListItemText primary="환자 목록" secondary="등록 및 관리" />
         </ListItemButton>
+        <ListItemButton
+          component={NavLink}
+          to="/clinical-info"
+          sx={{
+            borderRadius: 2,
+            mb: 1,
+            '&.active': {
+              backgroundColor: '#eef2ff'
+            }
+          }}
+        >
+          <ListItemText primary="임상정보" secondary="수가·처치 마스터" />
+        </ListItemButton>
       </List>
       <Typography variant="caption" color="text.secondary">
         © {new Date().getFullYear()} Axon Medical Records

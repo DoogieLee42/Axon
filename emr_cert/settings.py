@@ -2,6 +2,8 @@ from pathlib import Path
 
 BASE_DIR=Path(__file__).resolve().parent.parent
 DB_ROOT=BASE_DIR/'db'
+FRONTEND_DIR=BASE_DIR/'frontend'
+FRONTEND_DIST=FRONTEND_DIR/'dist'
 
 SECRET_KEY='dev'
 DEBUG=True
@@ -29,4 +31,16 @@ TIME_ZONE='Asia/Seoul'
 USE_I18N=True
 USE_TZ=True
 STATIC_URL='static/'
+STATIC_ROOT=BASE_DIR/'staticfiles'
+STATICFILES_DIRS=[]
+
+frontend_assets=FRONTEND_DIST/'assets'
+if frontend_assets.exists():
+    STATICFILES_DIRS.append(frontend_assets)
+
+CSRF_TRUSTED_ORIGINS=[
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
+
 DEFAULT_AUTO_FIELD='django.db.models.BigAutoField'

@@ -63,7 +63,7 @@ class Command(BaseCommand):
         if kind == "diagnosis":
             rows = map_diagnosis(df)
         elif kind == "procedure":
-            if "HIRA_PROC" in file_path.name.upper():
+            if "HIRA_PROC" in file_path.name.upper() or "수가코드" in df.columns:
                 rows = map_procedure_hira_2025(df)
             else:
                 rows = map_procedure(df)

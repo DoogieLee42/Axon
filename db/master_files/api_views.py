@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import json
 from typing import Any, Dict, Iterable, Tuple

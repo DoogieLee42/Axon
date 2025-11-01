@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PatientDetailResponse } from '../types/patient';
 
 const usePatientDetail = (patientId: number | null) => {
   const [detail, setDetail] = useState<PatientDetailResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+
+  const reload = useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
 
   useEffect(() => {
     if (!patientId) {
@@ -21,7 +26,10 @@ const usePatientDetail = (patientId: number | null) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/patients/${patientId}/`, { signal: controller.signal });
+        const response = await fetch(`/api/patients/${patientId}/`, {
+          signal: controller.signal,
+          credentials: 'include'
+        });
         if (!response.ok) {
           throw new Error('환자 정보를 불러오는 데 실패했습니다.');
         }
@@ -47,9 +55,9 @@ const usePatientDetail = (patientId: number | null) => {
       isMounted = false;
       controller.abort();
     };
-  }, [patientId]);
+  }, [patientId, reloadToken]);
 
-  return { detail, loading, error };
+  return { detail, loading, error, reload };
 };
 
 export default usePatientDetail;

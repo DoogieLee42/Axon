@@ -1,16 +1,20 @@
 from django.db import models
+from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from db.patients.models import Patient
 
 class ClinicalNote(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="clinical_notes")
-    visit_date = models.DateTimeField("내원일시", auto_now_add=True)
+    visit_date = models.DateTimeField("내원일시", default=timezone.now)
     chief_complaint = models.CharField("주증상", max_length=200, blank=True)
     s_text = models.TextField("S", blank=True)
     o_text = models.TextField("O", blank=True)
     a_text = models.TextField("A(진단/평가)", blank=True)
     p_text = models.TextField("P(계획)", blank=True)
     primary_icd = models.CharField("KCD/ICD 기본진단코드", max_length=16, blank=True)
+    narrative = models.TextField("임상서술", blank=True)
+    social_history_text = models.TextField("사회력 요약", blank=True)
+    family_history_text = models.TextField("가족력 요약", blank=True)
     history = HistoricalRecords()
 
     class Meta:
